@@ -1,0 +1,117 @@
+---
+title: "Final project"
+author: "Dariel Nunez, Juan Liberos, Patrick Isky, Dariel Jimenez"
+format: html
+editor: visual
+---
+
+# Data
+
+[Data](https://catalog.data.gov/dataset/national-obesity-by-state-d765a/resource/5fd75a16-98e4-467e-ab49-156fe25de504)(Download the xlsx version)
+
+```{r}
+library(tidyverse)
+library(effects)
+library(readxl)
+
+state <- read_excel("obesity_data/LakeCounty_Health_-1642538411848975661.xlsx")
+
+```
+
+#### Variables of the data state:
+
+NAME(the states) = categorical
+
+Obesity = numeric continuous
+
+Shape_area = numeric continuous
+
+Shape_length = numeric continuous
+
+# Question 1(categorical vs numeric continuous)
+
+Which state has the highest percent of obesity? Which has the lowest?
+
+```{r}
+state|>
+  summarize(Highest= max(Obesity),
+            Lowest = min(Obesity))
+```
+
+### Plot
+
+```{r}
+state|>
+   ggplot(aes(y = reorder(NAME, Obesity), x = Obesity))+
+  geom_point()
+```
+
+### Conclusion
+
+The state with the highest obesity rate is Lousiana with a 36.2% of obesity. The state with the lowest obesity rate is colorado with a 20.2%.
+
+# Question 2 (categorical vs numeric continuous)
+
+Which region has on average the highest obesity percentage?
+
+### Data
+
+```{r}
+northeast <- c("Connecticut", "Maine", "Massachusetts", "New Hampshire", "New Jersey", "New York", "Pennsylvania", "Rhode Island", "Vermont")
+
+midwest <- c("Illinois", "Indiana", "Iowa", "Kansas", "Michigan", "Minnesota", "Missouri", "Nebraska", "North Dakota", "Ohio", "South Dakota", "Wisconsin")
+
+south <- c("Alabama", "Arkansas", "Delaware", "Florida", "Georgia", "Kentucky", "Louisiana", "Maryland", "Mississippi", "North Carolina", "Oklahoma", "South Carolina", "Tennessee", "Texas", "Virginia", "West Virginia", "Puerto Rico")
+
+west <- c("Alaska", "Arizona", "California", "Colorado", "Hawaii", "Idaho", "Montana", "Nevada", "New Mexico", "Oregon", "Utah", "Washington", "Wyoming")
+
+
+
+by_region<- state|>
+  mutate (region = ifelse(NAME %in% northeast, "northeast", 
+                          ifelse(NAME %in% midwest, "midwest",
+                                 ifelse(NAME %in% south, "south",
+                                        ifelse(NAME %in% west, "west", "District of Columbia")))))
+```
+
+#### Variables of the data by_region:
+
+NAME(the states) = categorical
+
+Obesity = numeric continuous
+
+region = categorical
+
+Shape_area = numeric continuous
+
+Shape_length = numeric continuous
+
+```{r}
+by_region|>
+  group_by(region)|>
+  summarize(mean = mean(Obesity), median = median(Obesity))
+```
+
+### Linear Regression
+
+```{r}
+model <- lm(Obesity~region, data = by_region)
+
+summary(model)
+```
+
+The P value is less than 0.05 so we can reject the null hypothesis. The variance is 0.5259, meaning that the model explains 52.59% of the variation.
+
+### Plot
+
+```{r}
+by_region|>
+  group_by(region)|>
+  summarize(mean = mean(Obesity))|>
+  ggplot(aes(x = mean, y = reorder(region, mean)))+
+  geom_col()
+```
+
+### Conclusion
+
+The region with the highest obesity rate is the South with 32.28%. The region with the lowest rate of obesity is the West with 26.38%. The District of Columbia has a obesity rate of 22.10%.
